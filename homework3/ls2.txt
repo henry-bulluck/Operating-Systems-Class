@@ -1,0 +1,8 @@
+ls
+nonexistingfile
+
+1
+1
+11
+1
+0

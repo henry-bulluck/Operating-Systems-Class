@@ -1,0 +1,8 @@
+./task1
+100
+var1Custom=CustomVal##var2Custom=CustomVal2
+0
+1
+11
+0
+0
