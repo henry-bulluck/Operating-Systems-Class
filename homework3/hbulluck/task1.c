@@ -18,4 +18,6 @@ int main(int argc, char *argv[], char* env[]){
 	//prints process IDs
 	printf("Parent Process ID: %d\n",(int) getppid());
 	printf("Child Process ID: %d\n",(int) getpid());
+	
+	return 0;
 }
