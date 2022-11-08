@@ -31,6 +31,8 @@ void process_command(command);
 
 //global variables here
 //Hint: You might need to save information (like a counter) for children processes
+int counter = 0;
+pid_t* pid;
 
 short getlinedup(FILE* fp, char** value){
   char* line = NULL;
@@ -157,6 +159,8 @@ void free_command(command cmd){
 }
 
 void process_command(command parsed_command){
+  int mycounter = counter;
+  counter++;
   /*
   process_command will:
   - get a parsed_command variable
@@ -223,14 +227,20 @@ void process_command(command parsed_command){
   else{
     //
     if (parsed_command.wait){
-      int wc = wait(NULL);
+      int ec;
+      int wc = wait(&ec);
+      printf("Child process %d terminated with exit code %d\n",rc, ec);
     }
-  }
+    else{
+      pid[mycounter] = rc;
+    }
+  }  
   
 }
 
 int main(int argc, char *argv[], char* env[]) {
-
+  pid_t a[argc-1];
+  pid = a;
   for(int ncommand=1; ncommand<argc; ncommand++){
     command parsed_command;
     int ret = parse_command(&parsed_command, argv[ncommand]);
@@ -249,8 +259,14 @@ int main(int argc, char *argv[], char* env[]) {
   }
   
   //remember to wait for the termination of all the child processes, regardless of the value of parsed_command.wait
-  
-
+  int childstatus;
+  for (int i=0;i<argc-1;i++){
+     if(pid[i] != 0){
+     	int status;
+     	int wc = waitpid(pid[i], &status, 0);
+     	printf("Child process %d terminated with exit code %d\n",pid[i], WIFEXITED(status));
+     }
+  }
 
 
 }
