@@ -20,8 +20,8 @@ unsigned int NSOLUTIONS = 8;
 unsigned short found_solutions = 0;
 unsigned long* solutions;
 //locks for threads
-pthread_rwlock_t f_sol_lock;
-pthread_rwlock_t sol_lock;
+pthread_rwlock_t f_sol_lock = PTHREAD_RWLOCK_INITIALIZER;
+pthread_rwlock_t sol_lock = PTHREAD_RWLOCK_INITIALIZER;
 
 unsigned short divisibility_check(unsigned long n){
     //very not efficient algorithm
@@ -65,14 +65,11 @@ void* worker_thread_function(void *tinput_void){
         if(try_solution(tinput->challenge, attempted_solution)){
             //condition2: the last digit must be different in all the solutions
             short bad_solution = 0;
-            
             for(int i=0;i<found_solutions;i++){
-            	
                 if(attempted_solution%10 == solutions[i]%10){
                     bad_solution = 1;
                 }
             }
-            
             if(bad_solution){
                 continue;
             }
@@ -87,7 +84,6 @@ void* worker_thread_function(void *tinput_void){
             }
             
             solutions[found_solutions] = attempted_solution;
-            
             found_solutions++;
             
             if(found_solutions==NSOLUTIONS){
