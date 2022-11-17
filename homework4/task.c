@@ -14,6 +14,7 @@ typedef struct{
 
 
 unsigned int NSOLUTIONS = 8;
+//unsigned long THING = 1000000000 / NSOLUTIONS;
 
 //the following two global variables are used by worker threads to communicate back the found results to the main thread
 unsigned short found_solutions = 0;
@@ -55,8 +56,9 @@ short try_solution(unsigned short challenge, unsigned long attempted_solution){
 
 void* worker_thread_function(void *tinput_void){
     tinput_t* tinput = (tinput_t*) tinput_void;
+    //printf("y:%d x:%d\n",tinput->tid, tinput->challenge);
 
-    unsigned long first_tried_solution = 0;
+    unsigned long first_tried_solution = (tinput->tid)*(1000000000L/NSOLUTIONS);
     //1000*1000000000L*1000 is just very big number, which we will never reach
     for(unsigned long attempted_solution=first_tried_solution; attempted_solution<1000*1000000000L*1000; attempted_solution++){
         
@@ -65,6 +67,9 @@ void* worker_thread_function(void *tinput_void){
             //condition2: the last digit must be different in all the solutions
             short bad_solution = 0;
             pthread_rwlock_rdlock(&f_sol_lock); //locks on found_solution
+            if(found_solutions==NSOLUTIONS){
+                return NULL;
+            }
             for(int i=0;i<found_solutions;i++){
             	pthread_rwlock_rdlock(&sol_lock); //locks on solutions
                 if(attempted_solution%10 == solutions[i]%10){
@@ -72,10 +77,11 @@ void* worker_thread_function(void *tinput_void){
                 }
                 pthread_rwlock_unlock(&sol_lock); //unlocks on solutions
             }
-            pthread_rwlock_unlock(&f_sol_lock); //unlocks on found_solution
+            
             if(bad_solution){
                 continue;
             }
+            pthread_rwlock_unlock(&f_sol_lock); //unlocks on found_solution
 
             //condition3: no solution should be divisible by any number in the range [1000000, 1500000]
             if(!divisibility_check(attempted_solution)){
@@ -83,6 +89,9 @@ void* worker_thread_function(void *tinput_void){
             }
             
             pthread_rwlock_rdlock(&f_sol_lock); //locks on found_solution
+            if(found_solutions==NSOLUTIONS){
+                return NULL;
+            }
             pthread_rwlock_rdlock(&sol_lock); //locks on solutions
             solutions[found_solutions] = attempted_solution;
             pthread_rwlock_unlock(&sol_lock); //unlocks on solutions
