@@ -65,10 +65,6 @@ void* worker_thread_function(void *tinput_void){
             //condition2: the last digit must be different in all the solutions
             short bad_solution = 0;
             pthread_rwlock_rdlock(&f_sol); //4
-            if(found_solutions==NSOLUTIONS){
-            	//pthread_rwlock_unlock(&sol);
-                return NULL;
-            }
             for(int i=0;i<found_solutions;i++){
             	pthread_rwlock_rdlock(&sol); //5
                 if(attempted_solution%10 == solutions[i]%10){
