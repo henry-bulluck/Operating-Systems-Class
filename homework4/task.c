@@ -64,7 +64,7 @@ void* worker_thread_function(void *tinput_void){
         if(try_solution(tinput->challenge, attempted_solution)){
             //condition2: the last digit must be different in all the solutions
             short bad_solution = 0;
-            pthread_rwlock_rdlock(&f_sol); //4
+            //pthread_rwlock_rdlock(&f_sol); //4
             for(int i=0;i<found_solutions;i++){
             	pthread_rwlock_rdlock(&sol); //5
                 if(attempted_solution%10 == solutions[i]%10){
@@ -72,7 +72,7 @@ void* worker_thread_function(void *tinput_void){
                 }
                 pthread_rwlock_unlock(&sol); //5
             }
-            pthread_rwlock_unlock(&f_sol); //4
+            //pthread_rwlock_unlock(&f_sol); //4
             if(bad_solution){
                 continue;
             }
@@ -81,30 +81,25 @@ void* worker_thread_function(void *tinput_void){
             if(!divisibility_check(attempted_solution)){
                 continue;
             }
-            pthread_rwlock_rdlock(&f_sol); //1
+            //pthread_rwlock_rdlock(&f_sol); //1
             if(found_solutions==NSOLUTIONS){
             	//pthread_rwlock_unlock(&sol);
                 return NULL;
             }
-            pthread_rwlock_unlock(&f_sol); //1
+            //pthread_rwlock_unlock(&f_sol); //1
             
             pthread_rwlock_wrlock(&sol); //2
-            pthread_rwlock_rdlock(&f_sol); //a
             solutions[found_solutions] = attempted_solution;
-            pthread_rwlock_unlock(&f_sol); //a
+            found_solutions++;
             pthread_rwlock_unlock(&sol); //2
             
-            pthread_rwlock_rdlock(&f_sol); //3
-            found_solutions++;
-            pthread_rwlock_rdlock(&f_sol); //3
             
-            
-            pthread_rwlock_rdlock(&f_sol); //3
+            //pthread_rwlock_rdlock(&f_sol); //3
             if(found_solutions==NSOLUTIONS){
             	//pthread_rwlock_unlock(&sol);
                 return NULL;
             }
-            pthread_rwlock_unlock(&f_sol); //3
+            //pthread_rwlock_unlock(&f_sol); //3
         }
     }
 }
