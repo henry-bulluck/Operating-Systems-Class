@@ -14,14 +14,13 @@ typedef struct{
 
 
 unsigned int NSOLUTIONS = 8;
-//unsigned long THING = 1000000000 / NSOLUTIONS;
 
 //the following two global variables are used by worker threads to communicate back the found results to the main thread
 unsigned short found_solutions = 0;
 unsigned long* solutions;
 //locks for threads
-pthread_rwlock_t f_sol_lock = PTHREAD_RWLOCK_INITIALIZER;
-pthread_rwlock_t sol_lock = PTHREAD_RWLOCK_INITIALIZER;
+pthread_rwlock_t f_sol;
+pthread_rwlock_t sol;
 
 unsigned short divisibility_check(unsigned long n){
     //very not efficient algorithm
@@ -60,16 +59,24 @@ void* worker_thread_function(void *tinput_void){
     unsigned long first_tried_solution = (tinput->tid)*(1000000000L/NSOLUTIONS);
     //1000*1000000000L*1000 is just very big number, which we will never reach
     for(unsigned long attempted_solution=first_tried_solution; attempted_solution<1000*1000000000L*1000; attempted_solution++){
-        pthread_rwlock_rdlock(&sol_lock); //locks on solution
+        
         //condition1: sha256(attempted_solution) == challenge
         if(try_solution(tinput->challenge, attempted_solution)){
             //condition2: the last digit must be different in all the solutions
             short bad_solution = 0;
+            pthread_rwlock_rdlock(&f_sol); //4
+            if(found_solutions==NSOLUTIONS){
+            	//pthread_rwlock_unlock(&sol);
+                return NULL;
+            }
             for(int i=0;i<found_solutions;i++){
+            	pthread_rwlock_rdlock(&sol); //5
                 if(attempted_solution%10 == solutions[i]%10){
                     bad_solution = 1;
                 }
+                pthread_rwlock_unlock(&sol); //5
             }
+            pthread_rwlock_unlock(&f_sol); //4
             if(bad_solution){
                 continue;
             }
@@ -78,20 +85,31 @@ void* worker_thread_function(void *tinput_void){
             if(!divisibility_check(attempted_solution)){
                 continue;
             }
-            
+            pthread_rwlock_rdlock(&f_sol); //1
             if(found_solutions==NSOLUTIONS){
+            	//pthread_rwlock_unlock(&sol);
                 return NULL;
             }
+            pthread_rwlock_unlock(&f_sol); //1
             
+            pthread_rwlock_wrlock(&sol); //2
+            pthread_rwlock_rdlock(&f_sol); //a
             solutions[found_solutions] = attempted_solution;
-            found_solutions++;
+            pthread_rwlock_unlock(&f_sol); //a
+            pthread_rwlock_unlock(&sol); //2
             
+            pthread_rwlock_rdlock(&f_sol); //3
+            found_solutions++;
+            pthread_rwlock_rdlock(&f_sol); //3
+            
+            
+            pthread_rwlock_rdlock(&f_sol); //3
             if(found_solutions==NSOLUTIONS){
+            	//pthread_rwlock_unlock(&sol);
                 return NULL;
             }
-            
+            pthread_rwlock_unlock(&f_sol); //3
         }
-        pthread_rwlock_unlock(&sol_lock); //unlocks on solution
     }
 }
 
